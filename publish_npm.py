@@ -158,7 +158,11 @@ def is_typescript_project():
 
 def git_commit_if_changes(version):
     # Check to see if this is a git repository
-    completed_process = subprocess.run(["git", "status"])
+    completed_process = subprocess.run(
+        ["git", "status"],
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+    )
     if completed_process.returncode != 0:
         error("This is not a git repository.")
 
