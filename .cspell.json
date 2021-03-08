@@ -1,0 +1,15 @@
+{
+    "version": "0.1",
+    "language": "en",
+    "dictionaries": [
+        "en_US"
+    ],
+    "words": [
+        "config",
+        "eslint",
+        "isaacscript",
+        "pass",
+        "pypi",
+        "zamiell"
+    ]
+}
