@@ -10,7 +10,12 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 source .env
 
 # Parse the version from the TOML file
-VERSION=$(sed -n 's/^.*version = "\(.*\)"/\1/p' pyproject.toml)
+PROJECT_FILE="pyproject.toml"
+cd "$DIR"
+VERSION=$(sed -n 's/^.*version = "\(.*\)"/\1/p' $PROJECT_FILE)
+
+echo "Make sure that you bump the version in the \"$PROJECT_FILE\" file."
+echo "Using version: $VERSION"
 
 # Commit
 git add -A
