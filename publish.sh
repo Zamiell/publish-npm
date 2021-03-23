@@ -20,6 +20,7 @@ echo "Using version: $VERSION"
 # Commit
 git add -A
 git commit -a -m "$VERSION"
+git pull
 git push
 
 # From: https://levelup.gitconnected.com/how-to-publish-a-python-command-line-application-to-pypi-5b97a6d586f1
