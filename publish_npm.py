@@ -12,7 +12,8 @@ import sys
 VERSION = pkg_resources.get_distribution("publish_npm").version
 DIR = os.getcwd()
 PROJECT_NAME = os.path.basename(DIR)
-PACKAGE_JSON_PATH = os.path.join(DIR, "package.json")
+PACKAGE_JSON = "package.json"
+PACKAGE_JSON_PATH = os.path.join(DIR, PACKAGE_JSON)
 
 
 def main():
@@ -25,7 +26,9 @@ def main():
     # Check to see if the "package.json" file exists
     if not os.path.isfile(PACKAGE_JSON_PATH):
         error(
-            'Failed to find the "package.json" file in the current working directory.'
+            'Failed to find the "{}" file in the current working directory.'.format(
+                PACKAGE_JSON
+            )
         )
 
     # Check to see if we are logged in to npm
@@ -42,12 +45,14 @@ def main():
 
     # Update the dependencies to the latest versions
     completed_process = subprocess.run(
-        ["npx", "npm-check-updates", "--upgrade", "--packageFile", "package.json"],
+        ["npx", "npm-check-updates", "--upgrade", "--packageFile", PACKAGE_JSON],
         shell=True,
     )
     if completed_process.returncode != 0:
         error(
-            'Failed to update the "package.json" dependencies to the latest versions.'
+            'Failed to update the "{}" dependencies to the latest versions.'.format(
+                PACKAGE_JSON
+            )
         )
 
     if is_typescript_project():
@@ -97,7 +102,9 @@ def parse_command_line_arguments():
         "-s",
         "--skip-increment",
         action="store_true",
-        help='do not increment the version number in the "package.json" file',
+        help='do not increment the version number in the "{}" file'.format(
+            PACKAGE_JSON
+        ),
     )
 
     return parser.parse_args()
@@ -139,7 +146,7 @@ def increment_version_in_package_json():
 
     completed_process = subprocess.run(["npx", "sort-package-json"], shell=True)
     if completed_process.returncode != 0:
-        error('Failed to sort the "package.json" file.')
+        error('Failed to sort the "{}" file.'.format(PACKAGE_JSON))
 
     return incremented_version
 
@@ -180,6 +187,9 @@ def git_commit_if_changes(version):
     completed_process = subprocess.run(["git", "commit", "-m", version])
     if completed_process.returncode != 0:
         error("Failed to git commit.")
+    completed_process = subprocess.run(["git", "pull", "--rebase"])
+    if completed_process.returncode != 0:
+        error("Failed to git pull.")
     completed_process = subprocess.run(["git", "push"])
     if completed_process.returncode != 0:
         error("Failed to git push.")
