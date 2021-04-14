@@ -18,7 +18,7 @@ PACKAGE_JSON_PATH = os.path.join(DIR, PACKAGE_JSON)
 
 def main():
     if sys.version_info < (3, 0):
-        print("Error: This script requires Python 3.")
+        printf("Error: This script requires Python 3.")
         sys.exit(1)
 
     args = parse_command_line_arguments()
@@ -44,7 +44,7 @@ def main():
         )
 
     # Update the dependencies to the latest versions
-    print("Updating NPM dependencies...")
+    printf("Updating NPM dependencies...")
     completed_process = subprocess.run(
         [
             "npx",
@@ -65,14 +65,14 @@ def main():
         )
 
     # If we updated any dependencies, then we need to install them
-    print("Installing NPM dependencies...")
+    printf("Installing NPM dependencies...")
     completed_process = subprocess.run(["npm", "install", "--silent"], shell=True)
     if completed_process.returncode != 0:
         error('Failed to run "npm install".')
 
     # Before we increment the version number, make sure that the program compiles
     if is_typescript_project():
-        print("Testing to see if the project compiles...")
+        printf("Testing to see if the project compiles...")
         compile_typescript()
 
     # Increment the version number
@@ -83,13 +83,13 @@ def main():
 
     # Build the program again so that the new version number is included in the compiled code
     if is_typescript_project():
-        print("Re-compiling the project...")
+        printf("Re-compiling the project...")
         compile_typescript()
 
     git_commit_if_changes(version)
 
     # Publish
-    print("Publishing to NPM...")
+    printf("Publishing to NPM...")
     completed_process = subprocess.run(
         [
             "npm",
@@ -103,7 +103,7 @@ def main():
         error("Failed to npm publish.")
 
     # Done
-    print("Published {} version {} successfully.".format(PROJECT_NAME, version))
+    printf("Published {} version {} successfully.".format(PROJECT_NAME, version))
 
 
 def parse_command_line_arguments():
@@ -214,7 +214,7 @@ def git_commit_if_changes(version):
         return
 
     # Commit to the repository
-    print("Committing to the Git repository...")
+    printf("Committing to the Git repository...")
     completed_process = subprocess.run(["git", "add", "-A"])
     if completed_process.returncode != 0:
         error("Failed to git add.")
@@ -230,8 +230,12 @@ def git_commit_if_changes(version):
 
 
 def error(msg):
-    print("Error: {}".format(msg))
+    printf("Error: {}".format(msg))
     sys.exit(1)
+
+
+def printf(msg):
+    print(msg, flush=True)
 
 
 if __name__ == "__main__":
