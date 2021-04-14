@@ -55,6 +55,11 @@ def main():
             )
         )
 
+    # If we updated any dependencies, then we need to install them
+    completed_process = subprocess.run(["npm", "install"], shell=True)
+    if completed_process.returncode != 0:
+        error("Failed to npm install.")
+
     if is_typescript_project():
         compile_typescript()
 
@@ -173,7 +178,7 @@ def is_typescript_project():
 def compile_typescript():
     build_script_path = os.path.join(DIR, "build.sh")
     if os.path.isfile(build_script_path):
-        completed_process = subprocess.run([build_script_path], shell=True)
+        completed_process = subprocess.run(["bash", build_script_path], shell=True)
         if completed_process.returncode != 0:
             error('Failed to run the "build.sh" script.')
     else:
