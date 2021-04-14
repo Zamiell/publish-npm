@@ -22,6 +22,12 @@ if [[ -z $PYPI_PASS ]]; then
   exit 1
 fi
 
+# Check to see if poetry is installed
+if ! command -v "poetry" > /dev/null; then
+  echo "Error: poetry is not installed."
+  exit 1
+fi
+
 # Parse the version from the TOML file
 PROJECT_FILE="pyproject.toml"
 cd "$DIR"
