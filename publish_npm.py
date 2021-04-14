@@ -56,15 +56,22 @@ def main():
         )
 
     if is_typescript_project():
-        # Check to make sure that the project compiles
-        completed_process = subprocess.run(["npx", "tsc"], shell=True)
-        if completed_process.returncode != 0:
-            error("Failed to build the project.")
+        compile_typescript()
 
     if args.skip_increment:
         version = get_version_from_package_json()
     else:
         version = increment_version_in_package_json()
+
+        # Build it again so that the new version number is included in the compiled code
+        if is_typescript_project():
+            compile_typescript()
+
+    if is_typescript_project():
+        # Check to make sure that the project compiles
+        completed_process = subprocess.run(["npx", "tsc"], shell=True)
+        if completed_process.returncode != 0:
+            error("Failed to build the project.")
 
     git_commit_if_changes(version)
 
@@ -161,6 +168,18 @@ def is_typescript_project():
         "devDependencies" in package_json
         and "typescript" in package_json["devDependencies"]
     )
+
+
+def compile_typescript():
+    build_script_path = os.path.join(DIR, "build.sh")
+    if os.path.isfile(build_script_path):
+        completed_process = subprocess.run([build_script_path], shell=True)
+        if completed_process.returncode != 0:
+            error('Failed to run the "build.sh" script.')
+    else:
+        completed_process = subprocess.run(["npx", "tsc"], shell=True)
+        if completed_process.returncode != 0:
+            error('Failed to build the project with "npx tsc".')
 
 
 def git_commit_if_changes(version):
