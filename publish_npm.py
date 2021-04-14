@@ -44,8 +44,17 @@ def main():
         )
 
     # Update the dependencies to the latest versions
+    print("Updating NPM dependencies...")
     completed_process = subprocess.run(
-        ["npx", "npm-check-updates", "--upgrade", "--packageFile", PACKAGE_JSON],
+        [
+            "npx",
+            "npm-check-updates",
+            "--upgrade",
+            "--packageFile",
+            PACKAGE_JSON,
+            "--loglevel",
+            "silent",
+        ],
         shell=True,
     )
     if completed_process.returncode != 0:
@@ -56,31 +65,31 @@ def main():
         )
 
     # If we updated any dependencies, then we need to install them
-    completed_process = subprocess.run(["npm", "install"], shell=True)
+    print("Installing NPM dependencies...")
+    completed_process = subprocess.run(["npm", "install", "--silent"], shell=True)
     if completed_process.returncode != 0:
-        error("Failed to npm install.")
+        error('Failed to run "npm install".')
 
+    # Before we increment the version number, make sure that the program compiles
     if is_typescript_project():
+        print("Testing to see if the project compiles...")
         compile_typescript()
 
+    # Increment the version number
     if args.skip_increment:
         version = get_version_from_package_json()
     else:
         version = increment_version_in_package_json()
 
-        # Build it again so that the new version number is included in the compiled code
-        if is_typescript_project():
-            compile_typescript()
-
+    # Build the program again so that the new version number is included in the compiled code
     if is_typescript_project():
-        # Check to make sure that the project compiles
-        completed_process = subprocess.run(["npx", "tsc"], shell=True)
-        if completed_process.returncode != 0:
-            error("Failed to build the project.")
+        print("Re-compiling the project...")
+        compile_typescript()
 
     git_commit_if_changes(version)
 
     # Publish
+    print("Publishing to NPM...")
     completed_process = subprocess.run(
         [
             "npm",
@@ -205,6 +214,7 @@ def git_commit_if_changes(version):
         return
 
     # Commit to the repository
+    print("Committing to the Git repository...")
     completed_process = subprocess.run(["git", "add", "-A"])
     if completed_process.returncode != 0:
         error("Failed to git add.")
