@@ -209,7 +209,16 @@ def git_commit_if_changes(version):
     # Check to see if there are any changes
     # https://stackoverflow.com/questions/3878624/how-do-i-programmatically-determine-if-there-are-uncommitted-changes
     completed_process = subprocess.run(["git", "diff-index", "--quiet", "HEAD", "--"])
-    if completed_process.returncode == 0:
+    changes_to_existing_files = completed_process.returncode == 0
+
+    # Check to see if there are any untracked files
+    completed_process = subprocess.run(
+        ["git", "status", "--porcelain", "|", "grep", "^??", "|", "wc", "-l"],
+        shell=True,
+    )
+    untracked_files = completed_process.stdout.strip() != "0"
+
+    if not changes_to_existing_files and not untracked_files:
         printf("There are no changes to push to git.")
         return
 
