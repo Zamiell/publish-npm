@@ -217,8 +217,8 @@ def git_commit_if_changes(version):
         ["git", "ls-files", "--other", "--directory", "--exclude-standard"],
         stdout=subprocess.PIPE,
     )
-    git_output = completed_process.stdout.decode("utf-8").strip()
-    untracked_files_exist = git_output != ""
+    git_output = completed_process.stdout.decode("utf-8")
+    untracked_files_exist = git_output is not None and git_output.strip() != ""
 
     if not changes_to_existing_files and not untracked_files_exist:
         printf("There are no changes to push to git.")
