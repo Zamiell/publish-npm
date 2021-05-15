@@ -212,13 +212,15 @@ def git_commit_if_changes(version):
     changes_to_existing_files = completed_process.returncode == 0
 
     # Check to see if there are any untracked files
+    # https://stackoverflow.com/questions/11021287/git-detect-if-there-are-untracked-files-quickly
     completed_process = subprocess.run(
-        ["git", "status", "--porcelain", "|", "grep", "^??", "|", "wc", "-l"],
-        shell=True,
+        ["git", "ls-files", "--other", "--directory", "--exclude-standard"],
+        stdout=subprocess.PIPE,
     )
-    untracked_files = completed_process.stdout.strip() != "0"
+    git_output = completed_process.stdout.decode("utf-8").strip()
+    untracked_files_exist = git_output != ""
 
-    if not changes_to_existing_files and not untracked_files:
+    if not changes_to_existing_files and not untracked_files_exist:
         printf("There are no changes to push to git.")
         return
 
