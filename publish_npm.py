@@ -210,7 +210,7 @@ def git_commit_if_changes(version):
     # https://stackoverflow.com/questions/3878624/how-do-i-programmatically-determine-if-there-are-uncommitted-changes
     completed_process = subprocess.run(["git", "diff-index", "--quiet", "HEAD", "--"])
     if completed_process.returncode == 0:
-        # There are no changes
+        printf("There are no changes to push to git.")
         return
 
     # Commit to the repository
@@ -227,6 +227,8 @@ def git_commit_if_changes(version):
     completed_process = subprocess.run(["git", "push"])
     if completed_process.returncode != 0:
         error("Failed to git push.")
+
+    printf('Pushed a commit to git for version "{}".'.format(version))
 
 
 def error(msg):
