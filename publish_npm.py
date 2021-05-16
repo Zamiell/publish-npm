@@ -76,10 +76,10 @@ def main():
         compile_typescript()
 
     # Increment the version number
-    if args.skip_increment:
-        version = get_version_from_package_json()
-    else:
-        version = increment_version_in_package_json()
+    version = get_version_from_package_json()
+    if not args.skip_increment:
+        version = increment_version(version)
+        put_version(version)
 
     # Build the program again so that the new version number is included in the compiled code
     if is_typescript_project():
@@ -141,25 +141,23 @@ def get_version_from_package_json():
     return package_json["version"]
 
 
-def increment_version_in_package_json():
-    with open(PACKAGE_JSON_PATH, "r") as file_handle:
-        package_json = json.load(file_handle)
-
-    if "version" not in package_json:
-        error('Failed to find the version in the "{}" file.'.format(PACKAGE_JSON_PATH))
-
-    match = re.search(r"(.+\..+\.)(.+)", package_json["version"])
+def increment_version(version: str):
+    match = re.search(r"(.+\..+\.)(.+)", version)
     if not match:
-        error(
-            'Failed to parse the version number of "{}".'.format(
-                package_json["version"]
-            )
-        )
+        error('Failed to parse the version number of "{}".'.format(version))
     version_prefix = match.group(1)
     patch_version = int(match.group(2))  # i.e. the third number
     incremented_patch_version = patch_version + 1
     incremented_version = version_prefix + str(incremented_patch_version)
-    package_json["version"] = incremented_version
+
+    return incremented_version
+
+
+def put_version(version: str):
+    with open(PACKAGE_JSON_PATH, "r") as file_handle:
+        package_json = json.load(file_handle)
+
+    package_json["version"] = version
 
     with open(PACKAGE_JSON_PATH, "w", newline="\n") as file_handle:
         json.dump(package_json, file_handle, indent=2, separators=(",", ": "))
@@ -168,8 +166,6 @@ def increment_version_in_package_json():
     completed_process = subprocess.run(["npx", "sort-package-json"], shell=True)
     if completed_process.returncode != 0:
         error('Failed to sort the "{}" file.'.format(PACKAGE_JSON))
-
-    return incremented_version
 
 
 def is_typescript_project():
@@ -191,6 +187,10 @@ def compile_typescript():
         if completed_process.returncode != 0:
             error('Failed to run the "build.sh" script.')
     else:
+        completed_process = subprocess.run(["rm", "-rf", "dist"], shell=True)
+        if completed_process.returncode != 0:
+            error('Failed to remove the "dist" directory.')
+
         completed_process = subprocess.run(["npx", "tsc"], shell=True)
         if completed_process.returncode != 0:
             error('Failed to build the project with "npx tsc".')
@@ -217,6 +217,8 @@ def git_commit_if_changes(version):
         ["git", "ls-files", "--other", "--directory", "--exclude-standard"],
         stdout=subprocess.PIPE,
     )
+    if completed_process.returncode != 0:
+        error("Failed to git ls-files.")
     git_output = completed_process.stdout.decode("utf-8")
     untracked_files_exist = git_output is not None and git_output.strip() != ""
 
