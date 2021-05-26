@@ -50,7 +50,8 @@ def main():
             "npx",
             "npm-check-updates",
             "--upgrade",
-            "--packageFile",
+            # Don't upgrade TypeScript, as latest versions will break TSTL
+            "--reject" "typescript" "--packageFile",
             PACKAGE_JSON,
             "--loglevel",
             "silent",
