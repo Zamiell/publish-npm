@@ -51,7 +51,9 @@ def main():
             "npm-check-updates",
             "--upgrade",
             # Don't upgrade TypeScript, as latest versions will break TSTL
-            "--reject" "typescript" "--packageFile",
+            "--reject",
+            "typescript",
+            "--packageFile",
             PACKAGE_JSON,
             "--loglevel",
             "silent",
