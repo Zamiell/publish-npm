@@ -44,7 +44,7 @@ def main():
         )
 
     # Update the dependencies to the latest versions
-    if not args.skip_increment:
+    if not args.skip_publish:
         printf("Updating NPM dependencies...")
         completed_process = subprocess.run(
             [
