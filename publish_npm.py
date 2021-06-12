@@ -8,6 +8,10 @@ import re
 import subprocess
 import sys
 
+if sys.version_info < (3, 0):
+    printf("Error: This script requires Python 3.")
+    sys.exit(1)
+
 # Constants
 VERSION = pkg_resources.get_distribution("publish_npm").version
 DIR = os.getcwd()
@@ -17,10 +21,6 @@ PACKAGE_JSON_PATH = os.path.join(DIR, PACKAGE_JSON)
 
 
 def main():
-    if sys.version_info < (3, 0):
-        printf("Error: This script requires Python 3.")
-        sys.exit(1)
-
     args = parse_command_line_arguments()
 
     # Check to see if the "package.json" file exists
@@ -44,34 +44,35 @@ def main():
         )
 
     # Update the dependencies to the latest versions
-    printf("Updating NPM dependencies...")
-    completed_process = subprocess.run(
-        [
-            "npx",
-            "npm-check-updates",
-            "--upgrade",
-            # Don't upgrade TypeScript, as latest versions will break TSTL
-            "--reject",
-            "typescript",
-            "--packageFile",
-            PACKAGE_JSON,
-            "--loglevel",
-            "silent",
-        ],
-        shell=True,
-    )
-    if completed_process.returncode != 0:
-        error(
-            'Failed to update the "{}" dependencies to the latest versions.'.format(
-                PACKAGE_JSON
-            )
+    if not args.skip_increment:
+        printf("Updating NPM dependencies...")
+        completed_process = subprocess.run(
+            [
+                "npx",
+                "npm-check-updates",
+                "--upgrade",
+                # Don't upgrade TypeScript, as latest versions will break TSTL
+                "--reject",
+                "typescript",
+                "--packageFile",
+                PACKAGE_JSON,
+                "--loglevel",
+                "silent",
+            ],
+            shell=True,
         )
+        if completed_process.returncode != 0:
+            error(
+                'Failed to update the "{}" dependencies to the latest versions.'.format(
+                    PACKAGE_JSON
+                )
+            )
 
-    # If we updated any dependencies, then we need to install them
-    printf("Installing NPM dependencies...")
-    completed_process = subprocess.run(["npm", "install", "--silent"], shell=True)
-    if completed_process.returncode != 0:
-        error('Failed to run "npm install".')
+        # If we updated any dependencies, then we need to install them
+        printf("Installing NPM dependencies...")
+        completed_process = subprocess.run(["npm", "install", "--silent"], shell=True)
+        if completed_process.returncode != 0:
+            error('Failed to run "npm install".')
 
     # Before we increment the version number, make sure that the program compiles
     if is_typescript_project():
@@ -129,6 +130,13 @@ def parse_command_line_arguments():
         help='do not increment the version number in the "{}" file'.format(
             PACKAGE_JSON
         ),
+    )
+
+    parser.add_argument(
+        "-u",
+        "--skip-update",
+        action="store_true",
+        help='do not update NPM dependencies in the "{}" file'.format(PACKAGE_JSON),
     )
 
     return parser.parse_args()
