@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 import argparse
+import hashlib
 import json
 import os
 import pkg_resources
@@ -45,15 +46,15 @@ def main():
 
     # Update the dependencies to the latest versions
     if not args.skip_update:
+        # Get the hash before we potentially modify the "package.json" file
+        before_hash = get_hash_of_package_json()
+
         printf("Updating NPM dependencies...")
         completed_process = subprocess.run(
             [
                 "npx",
                 "npm-check-updates",
                 "--upgrade",
-                # Don't upgrade TypeScript, as latest versions will break TSTL
-                "--reject",
-                "typescript",
                 "--packageFile",
                 PACKAGE_JSON,
                 "--loglevel",
@@ -68,11 +69,15 @@ def main():
                 )
             )
 
-        # If we updated any dependencies, then we need to install them
-        printf("Installing NPM dependencies...")
-        completed_process = subprocess.run(["npm", "install", "--silent"], shell=True)
-        if completed_process.returncode != 0:
-            error('Failed to run "npm install".')
+        after_hash = get_hash_of_package_json()
+        if before_hash != after_hash:
+            # The package.json file was modified, so install the new dependencies
+            printf("Installing NPM dependencies...")
+            completed_process = subprocess.run(
+                ["npm", "install", "--silent"], shell=True
+            )
+            if completed_process.returncode != 0:
+                error('Failed to run "npm install".')
 
     # Before we increment the version number, make sure that the program compiles
     if is_typescript_project():
@@ -140,6 +145,15 @@ def parse_command_line_arguments():
     )
 
     return parser.parse_args()
+
+
+def get_hash_of_package_json():
+    with open(PACKAGE_JSON_PATH, "rb") as f:
+        file_hash = hashlib.md5()
+        file_contents = f.read()
+        file_hash.update(file_contents)
+
+        return file_hash.hexdigest()
 
 
 def get_version_from_package_json():
