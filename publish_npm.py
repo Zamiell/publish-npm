@@ -23,61 +23,9 @@ PACKAGE_JSON_PATH = os.path.join(DIR, PACKAGE_JSON)
 
 def main():
     args = parse_command_line_arguments()
-
-    # Check to see if the "package.json" file exists
-    if not os.path.isfile(PACKAGE_JSON_PATH):
-        error(
-            'Failed to find the "{}" file in the current working directory.'.format(
-                PACKAGE_JSON
-            )
-        )
-
-    # Check to see if we are logged in to npm
-    completed_process = subprocess.run(
-        ["npm", "whoami"],
-        shell=True,
-        stdout=subprocess.DEVNULL,
-        stderr=subprocess.DEVNULL,
-    )
-    if completed_process.returncode != 0:
-        error(
-            'The "npm whoami" command failed, so you are probably not logged in. Try doing "npm login".'
-        )
-
-    # Update the dependencies to the latest versions
-    if not args.skip_update:
-        # Get the hash before we potentially modify the "package.json" file
-        before_hash = get_hash_of_package_json()
-
-        printf("Updating NPM dependencies...")
-        completed_process = subprocess.run(
-            [
-                "npx",
-                "npm-check-updates",
-                "--upgrade",
-                "--packageFile",
-                PACKAGE_JSON,
-                "--loglevel",
-                "silent",
-            ],
-            shell=True,
-        )
-        if completed_process.returncode != 0:
-            error(
-                'Failed to update the "{}" dependencies to the latest versions.'.format(
-                    PACKAGE_JSON
-                )
-            )
-
-        after_hash = get_hash_of_package_json()
-        if before_hash != after_hash:
-            # The package.json file was modified, so install the new dependencies
-            printf("Installing NPM dependencies...")
-            completed_process = subprocess.run(
-                ["npm", "install", "--silent"], shell=True
-            )
-            if completed_process.returncode != 0:
-                error('Failed to run "npm install".')
+    check_package_json_exists()
+    check_logged_in_to_npm()
+    update_dependencies(args)
 
     # Before we increment the version number, make sure that the program compiles
     if is_typescript_project():
@@ -97,19 +45,7 @@ def main():
 
     git_commit_if_changes(version)
 
-    # Publish
-    printf("Publishing to NPM...")
-    completed_process = subprocess.run(
-        [
-            "npm",
-            "publish",
-            "--access",
-            "public",
-        ],
-        shell=True,
-    )
-    if completed_process.returncode != 0:
-        error("Failed to npm publish.")
+    publish_to_npm()
 
     # Done
     printf("Published {} version {} successfully.".format(PROJECT_NAME, version))
@@ -145,6 +81,65 @@ def parse_command_line_arguments():
     )
 
     return parser.parse_args()
+
+
+def check_package_json_exists():
+    if not os.path.isfile(PACKAGE_JSON_PATH):
+        error(
+            'Failed to find the "{}" file in the current working directory.'.format(
+                PACKAGE_JSON
+            )
+        )
+
+
+def check_logged_in_to_npm():
+    completed_process = subprocess.run(
+        ["npm", "whoami"],
+        shell=True,
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+    )
+
+    if completed_process.returncode != 0:
+        error(
+            'The "npm whoami" command failed, so you are probably not logged in. Try doing "npm login".'
+        )
+
+
+def update_dependencies(args):
+    if not args.skip_update:
+        # Get the hash before we potentially modify the "package.json" file
+        before_hash = get_hash_of_package_json()
+
+        printf("Updating NPM dependencies...")
+        completed_process = subprocess.run(
+            [
+                "npx",
+                "npm-check-updates",
+                "--upgrade",
+                "--packageFile",
+                PACKAGE_JSON,
+                "--loglevel",
+                "silent",
+            ],
+            shell=True,
+        )
+        if completed_process.returncode != 0:
+            error(
+                'Failed to update the "{}" dependencies to the latest versions.'.format(
+                    PACKAGE_JSON
+                )
+            )
+
+        after_hash = get_hash_of_package_json()
+        if before_hash != after_hash:
+            # The package.json file was modified, so install the new dependencies
+            printf("Installing NPM dependencies...")
+            completed_process = subprocess.run(
+                ["npm", "install", "--silent"], shell=True
+            )
+            if completed_process.returncode != 0:
+                error('Failed to run "npm install".')
 
 
 def get_hash_of_package_json():
@@ -269,13 +264,28 @@ def git_commit_if_changes(version):
     printf('Pushed a commit to git for version "{}".'.format(version))
 
 
+def publish_to_npm():
+    printf("Publishing to NPM...")
+    completed_process = subprocess.run(
+        [
+            "npm",
+            "publish",
+            "--access",
+            "public",
+        ],
+        shell=True,
+    )
+    if completed_process.returncode != 0:
+        error("Failed to npm publish.")
+
+
 def error(msg):
     printf("Error: {}".format(msg))
     sys.exit(1)
 
 
-def printf(msg):
-    print(msg, flush=True)
+def printf(*args):
+    print(*args, flush=True)
 
 
 if __name__ == "__main__":
