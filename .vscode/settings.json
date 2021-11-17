@@ -29,4 +29,9 @@
     "editor.formatOnSave": true,
     "editor.tabSize": 4,
   },
+
+  "python.linting.pylintArgs": [
+    "--enable=all",
+    "--disable=subprocess-run-check,missing-module-docstring,missing-function-docstring,line-too-long",
+  ],
 }

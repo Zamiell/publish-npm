@@ -4,10 +4,11 @@ import argparse
 import hashlib
 import json
 import os
-import pkg_resources
 import re
 import subprocess
 import sys
+
+import pkg_resources
 
 if sys.version_info < (3, 0):
     printf("Error: This script requires Python 3.")
@@ -19,6 +20,10 @@ DIR = os.getcwd()
 PROJECT_NAME = os.path.basename(DIR)
 PACKAGE_JSON = "package.json"
 PACKAGE_JSON_PATH = os.path.join(DIR, PACKAGE_JSON)
+UPDATE_SCRIPT_NAME = "update.sh"
+UPDATE_SCRIPT_PATH = os.path.join(DIR, UPDATE_SCRIPT_NAME)
+BUILD_SCRIPT_NAME = "build.sh"
+BUILD_SCRIPT_PATH = os.path.join(DIR, BUILD_SCRIPT_NAME)
 
 
 def main():
@@ -95,6 +100,7 @@ def check_package_json_exists():
 def check_logged_in_to_npm():
     completed_process = subprocess.run(
         ["npm", "whoami"],
+        check=True,
         shell=True,
         stdout=subprocess.DEVNULL,
         stderr=subprocess.DEVNULL,
@@ -107,11 +113,19 @@ def check_logged_in_to_npm():
 
 
 def update_dependencies(args):
-    if not args.skip_update:
-        # Get the hash before we potentially modify the "package.json" file
-        before_hash = get_hash_of_package_json()
+    if args.skip_update:
+        return
 
-        printf("Updating NPM dependencies...")
+    printf("Updating NPM dependencies...")
+
+    # Get the hash before we potentially modify the "package.json" file
+    before_hash = get_hash_of_package_json()
+
+    if os.path.isfile(UPDATE_SCRIPT_PATH):
+        completed_process = subprocess.run(["bash", UPDATE_SCRIPT_PATH], shell=True)
+        if completed_process.returncode != 0:
+            error('Failed to run the "{}" script.'.format(UPDATE_SCRIPT_NAME))
+    else:
         completed_process = subprocess.run(
             [
                 "npx",
@@ -131,21 +145,19 @@ def update_dependencies(args):
                 )
             )
 
-        after_hash = get_hash_of_package_json()
-        if before_hash != after_hash:
-            # The package.json file was modified, so install the new dependencies
-            printf("Installing NPM dependencies...")
-            completed_process = subprocess.run(
-                ["npm", "install", "--silent"], shell=True
-            )
-            if completed_process.returncode != 0:
-                error('Failed to run "npm install".')
+    after_hash = get_hash_of_package_json()
+    if before_hash != after_hash:
+        # The package.json file was modified, so install the new dependencies
+        printf("Installing NPM dependencies...")
+        completed_process = subprocess.run(["npm", "install", "--silent"], shell=True)
+        if completed_process.returncode != 0:
+            error('Failed to run "npm install".')
 
 
 def get_hash_of_package_json():
-    with open(PACKAGE_JSON_PATH, "rb") as f:
+    with open(PACKAGE_JSON_PATH, "rb") as file_handle:
         file_hash = hashlib.md5()
-        file_contents = f.read()
+        file_contents = file_handle.read()
         file_hash.update(file_contents)
 
         return file_hash.hexdigest()
@@ -201,11 +213,10 @@ def is_typescript_project():
 
 
 def compile_typescript():
-    build_script_path = os.path.join(DIR, "build.sh")
-    if os.path.isfile(build_script_path):
-        completed_process = subprocess.run(["bash", build_script_path], shell=True)
+    if os.path.isfile(BUILD_SCRIPT_PATH):
+        completed_process = subprocess.run(["bash", BUILD_SCRIPT_PATH], shell=True)
         if completed_process.returncode != 0:
-            error('Failed to run the "build.sh" script.')
+            error('Failed to run the "{}" script.'.format(BUILD_SCRIPT_NAME))
     else:
         completed_process = subprocess.run(["rm", "-rf", "dist"], shell=True)
         if completed_process.returncode != 0:
