@@ -100,7 +100,6 @@ def check_package_json_exists():
 def check_logged_in_to_npm():
     completed_process = subprocess.run(
         ["npm", "whoami"],
-        check=True,
         shell=True,
         stdout=subprocess.DEVNULL,
         stderr=subprocess.DEVNULL,
