@@ -53,7 +53,7 @@ def main():
     publish_to_npm()
 
     # Done
-    printf("Published {} version {} successfully.".format(PROJECT_NAME, version))
+    printf(f"Published {PROJECT_NAME} version {version} successfully.")
 
 
 def parse_command_line_arguments():
@@ -73,16 +73,14 @@ def parse_command_line_arguments():
         "-s",
         "--skip-increment",
         action="store_true",
-        help='do not increment the version number in the "{}" file'.format(
-            PACKAGE_JSON
-        ),
+        help=f'do not increment the version number in the "{PACKAGE_JSON}" file',
     )
 
     parser.add_argument(
         "-u",
         "--skip-update",
         action="store_true",
-        help='do not update NPM dependencies in the "{}" file'.format(PACKAGE_JSON),
+        help=f'do not update NPM dependencies in the "{PACKAGE_JSON}" file',
     )
 
     return parser.parse_args()
@@ -91,9 +89,7 @@ def parse_command_line_arguments():
 def check_package_json_exists():
     if not os.path.isfile(PACKAGE_JSON_PATH):
         error(
-            'Failed to find the "{}" file in the current working directory.'.format(
-                PACKAGE_JSON
-            )
+            f'Failed to find the "{PACKAGE_JSON}" file in the current working directory.'
         )
 
 
@@ -123,7 +119,7 @@ def update_dependencies(args):
     if os.path.isfile(UPDATE_SCRIPT_PATH):
         completed_process = subprocess.run(["bash", UPDATE_SCRIPT_PATH], shell=True)
         if completed_process.returncode != 0:
-            error('Failed to run the "{}" script.'.format(UPDATE_SCRIPT_NAME))
+            error(f'Failed to run the "{UPDATE_SCRIPT_NAME}" script.')
     else:
         completed_process = subprocess.run(
             [
@@ -139,9 +135,7 @@ def update_dependencies(args):
         )
         if completed_process.returncode != 0:
             error(
-                'Failed to update the "{}" dependencies to the latest versions.'.format(
-                    PACKAGE_JSON
-                )
+                f'Failed to update the "{PACKAGE_JSON}" dependencies to the latest versions.'
             )
 
     after_hash = get_hash_of_package_json()
@@ -163,11 +157,11 @@ def get_hash_of_package_json():
 
 
 def get_version_from_package_json():
-    with open(PACKAGE_JSON_PATH, "r") as file_handle:
+    with open(PACKAGE_JSON_PATH, "r", encoding="utf8") as file_handle:
         package_json = json.load(file_handle)
 
     if "version" not in package_json:
-        error('Failed to find the version in the "{}" file.'.format(PACKAGE_JSON_PATH))
+        error(f'Failed to find the version in the "{PACKAGE_JSON_PATH}" file.')
 
     return package_json["version"]
 
@@ -175,7 +169,7 @@ def get_version_from_package_json():
 def increment_version(version: str):
     match = re.search(r"(.+\..+\.)(.+)", version)
     if not match:
-        error('Failed to parse the version number of "{}".'.format(version))
+        error(f"Failed to parse the version number of: {version}")
     version_prefix = match.group(1)
     patch_version = int(match.group(2))  # i.e. the third number
     incremented_patch_version = patch_version + 1
@@ -185,22 +179,26 @@ def increment_version(version: str):
 
 
 def put_version(version: str):
-    with open(PACKAGE_JSON_PATH, "r") as file_handle:
+    with open(PACKAGE_JSON_PATH, "r", encoding="utf8") as file_handle:
         package_json = json.load(file_handle)
 
     package_json["version"] = version
 
-    with open(PACKAGE_JSON_PATH, "w", newline="\n") as file_handle:
+    with open(PACKAGE_JSON_PATH, "w", encoding="utf8", newline="\n") as file_handle:
         json.dump(package_json, file_handle, indent=2, separators=(",", ": "))
         file_handle.write("\n")
 
     completed_process = subprocess.run(["npx", "sort-package-json"], shell=True)
     if completed_process.returncode != 0:
-        error('Failed to sort the "{}" file.'.format(PACKAGE_JSON))
+        error(f'Failed to sort the "{PACKAGE_JSON}" file.')
 
 
 def is_typescript_project():
-    with open(PACKAGE_JSON_PATH, "r") as file_handle:
+    with open(
+        PACKAGE_JSON_PATH,
+        "r",
+        encoding="utf8",
+    ) as file_handle:
         package_json = json.load(file_handle)
 
     return (
@@ -215,7 +213,7 @@ def compile_typescript():
     if os.path.isfile(BUILD_SCRIPT_PATH):
         completed_process = subprocess.run(["bash", BUILD_SCRIPT_PATH], shell=True)
         if completed_process.returncode != 0:
-            error('Failed to run the "{}" script.'.format(BUILD_SCRIPT_NAME))
+            error(f'Failed to run the "{BUILD_SCRIPT_NAME}" script.')
     else:
         completed_process = subprocess.run(["rm", "-rf", "dist"], shell=True)
         if completed_process.returncode != 0:
@@ -271,7 +269,7 @@ def git_commit_if_changes(version):
     if completed_process.returncode != 0:
         error("Failed to git push.")
 
-    printf('Pushed a commit to git for version "{}".'.format(version))
+    printf(f"Pushed a commit to git for version: {version}")
 
 
 def publish_to_npm():
@@ -290,7 +288,7 @@ def publish_to_npm():
 
 
 def error(msg):
-    printf("Error: {}".format(msg))
+    printf(f"Error: {msg}")
     sys.exit(1)
 
 
