@@ -48,7 +48,7 @@ def main():
         printf("Re-compiling the project...")
         compile_typescript()
 
-    git_commit_if_changes(version)
+    git_commit_if_changes(args, version)
 
     publish_to_npm()
 
@@ -81,6 +81,13 @@ def parse_command_line_arguments():
         "--skip-update",
         action="store_true",
         help=f'do not update NPM dependencies in the "{PACKAGE_JSON}" file',
+    )
+
+    parser.add_argument(
+        "-c",
+        "--skip-commit",
+        action="store_true",
+        help=f'do not make a commit to the git repository',
     )
 
     return parser.parse_args()
@@ -224,7 +231,10 @@ def compile_typescript():
             error('Failed to build the project with "npx tsc".')
 
 
-def git_commit_if_changes(version):
+def git_commit_if_changes(args, version):
+    if args.skip_commit:
+        return
+
     # Check to see if this is a git repository
     completed_process = subprocess.run(
         ["git", "status"],
