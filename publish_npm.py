@@ -87,7 +87,7 @@ def parse_command_line_arguments():
         "-c",
         "--skip-commit",
         action="store_true",
-        help=f'do not make a commit to the git repository',
+        help="do not make a commit to the git repository",
     )
 
     return parser.parse_args()
