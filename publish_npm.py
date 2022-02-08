@@ -129,9 +129,7 @@ def update_dependencies(args):
             shell=True,
         )
         if completed_process.returncode != 0:
-            error(
-                f'Failed to run the "{UPDATE_SCRIPT_NAME}" script with return code {completed_process.returncode}:\n{completed_process.stderr}'
-            )
+            error_script(completed_process, UPDATE_SCRIPT_NAME)
     else:
         completed_process = subprocess.run(
             [
@@ -147,7 +145,7 @@ def update_dependencies(args):
         )
         if completed_process.returncode != 0:
             error(
-                f'Failed to update the "{PACKAGE_JSON}" dependencies to the latest versions.'
+                f'Failed to run the "npm-check-updates" program to update the "{PACKAGE_JSON}" dependencies to the latest versions.'
             )
 
     after_hash = get_hash_of_package_json()
@@ -225,9 +223,7 @@ def compile_typescript():
     if os.path.isfile(BUILD_SCRIPT_PATH):
         completed_process = subprocess.run(["bash", BUILD_SCRIPT_PATH], shell=True)
         if completed_process.returncode != 0:
-            error(
-                f'Failed to run the "{BUILD_SCRIPT_NAME}" script with return code {completed_process.returncode}:\n{completed_process.stderr}'
-            )
+            error_script(completed_process, BUILD_SCRIPT_NAME)
     else:
         completed_process = subprocess.run(["rm", "-rf", "dist"], shell=True)
         if completed_process.returncode != 0:
@@ -307,6 +303,24 @@ def publish_to_npm():
 def error(msg):
     printf(f"Error: {msg}")
     sys.exit(1)
+
+
+def error_script(completed_process: subprocess.CompletedProcess, script_name: str):
+    msg = f'Failed to run the "{script_name}" script with return code {completed_process.returncode}'
+    if (
+        completed_process.stdout is not None
+        and completed_process.stdout != ""
+        and completed_process.stderr is not None
+        and completed_process.stderr != ""
+    ):
+        msg += ":\n"
+        if completed_process.stdout is not None and completed_process.stdout != "":
+            msg += completed_process.stdout
+        if completed_process.stderr is not None and completed_process.stderr != "":
+            msg += completed_process.stderr
+    else:
+        msg += "."
+    error(msg)
 
 
 def printf(*args):
