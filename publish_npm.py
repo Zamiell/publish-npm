@@ -127,6 +127,7 @@ def update_dependencies(args):
         completed_process = subprocess.run(
             ["bash", UPDATE_SCRIPT_PATH],
             shell=True,
+            capture_output=True,
         )
         if completed_process.returncode != 0:
             error_script(completed_process, UPDATE_SCRIPT_NAME)
@@ -221,7 +222,7 @@ def is_typescript_project():
 
 def compile_typescript():
     if os.path.isfile(BUILD_SCRIPT_PATH):
-        completed_process = subprocess.run(["bash", BUILD_SCRIPT_PATH], shell=True)
+        completed_process = subprocess.run(["bash", BUILD_SCRIPT_PATH], shell=True, capture_output=True,)
         if completed_process.returncode != 0:
             error_script(completed_process, BUILD_SCRIPT_NAME)
     else:
