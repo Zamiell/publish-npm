@@ -130,7 +130,7 @@ def update_dependencies(args):
         )
         if completed_process.returncode != 0:
             error(
-                f'Failed to run the "{UPDATE_SCRIPT_NAME}" script with return code {completed_process.returncode}:\n{completed_process.stdout}'
+                f'Failed to run the "{UPDATE_SCRIPT_NAME}" script with return code {completed_process.returncode}:\n{completed_process.stderr}'
             )
     else:
         completed_process = subprocess.run(
@@ -226,7 +226,7 @@ def compile_typescript():
         completed_process = subprocess.run(["bash", BUILD_SCRIPT_PATH], shell=True)
         if completed_process.returncode != 0:
             error(
-                f'Failed to run the "{BUILD_SCRIPT_NAME}" script with return code {completed_process.returncode}:\n{completed_process.stdout}'
+                f'Failed to run the "{BUILD_SCRIPT_NAME}" script with return code {completed_process.returncode}:\n{completed_process.stderr}'
             )
     else:
         completed_process = subprocess.run(["rm", "-rf", "dist"], shell=True)
