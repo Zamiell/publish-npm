@@ -124,9 +124,14 @@ def update_dependencies(args):
     before_hash = get_hash_of_package_json()
 
     if os.path.isfile(UPDATE_SCRIPT_PATH):
-        completed_process = subprocess.run(["bash", UPDATE_SCRIPT_PATH], shell=True)
+        completed_process = subprocess.run(
+            ["bash", UPDATE_SCRIPT_PATH],
+            shell=True,
+        )
         if completed_process.returncode != 0:
-            error(f'Failed to run the "{UPDATE_SCRIPT_NAME}" script.')
+            error(
+                f'Failed to run the "{UPDATE_SCRIPT_NAME}" script with return code {completed_process.returncode}:\n{completed_process.stdout}'
+            )
     else:
         completed_process = subprocess.run(
             [
@@ -220,7 +225,9 @@ def compile_typescript():
     if os.path.isfile(BUILD_SCRIPT_PATH):
         completed_process = subprocess.run(["bash", BUILD_SCRIPT_PATH], shell=True)
         if completed_process.returncode != 0:
-            error(f'Failed to run the "{BUILD_SCRIPT_NAME}" script.')
+            error(
+                f'Failed to run the "{BUILD_SCRIPT_NAME}" script with return code {completed_process.returncode}:\n{completed_process.stdout}'
+            )
     else:
         completed_process = subprocess.run(["rm", "-rf", "dist"], shell=True)
         if completed_process.returncode != 0:
