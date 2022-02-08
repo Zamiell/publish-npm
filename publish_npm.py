@@ -124,13 +124,7 @@ def update_dependencies(args):
     before_hash = get_hash_of_package_json()
 
     if os.path.isfile(UPDATE_SCRIPT_PATH):
-        completed_process = subprocess.run(
-            ["bash", UPDATE_SCRIPT_PATH],
-            shell=True,
-            capture_output=True,
-        )
-        if completed_process.returncode != 0:
-            error_script(completed_process, UPDATE_SCRIPT_NAME)
+        run_script(UPDATE_SCRIPT_NAME, UPDATE_SCRIPT_PATH)
     else:
         completed_process = subprocess.run(
             [
@@ -222,9 +216,7 @@ def is_typescript_project():
 
 def compile_typescript():
     if os.path.isfile(BUILD_SCRIPT_PATH):
-        completed_process = subprocess.run(["bash", BUILD_SCRIPT_PATH], shell=True, capture_output=True,)
-        if completed_process.returncode != 0:
-            error_script(completed_process, BUILD_SCRIPT_NAME)
+        run_script(BUILD_SCRIPT_NAME, BUILD_SCRIPT_PATH)
     else:
         completed_process = subprocess.run(["rm", "-rf", "dist"], shell=True)
         if completed_process.returncode != 0:
@@ -306,19 +298,26 @@ def error(msg):
     sys.exit(1)
 
 
-def error_script(completed_process: subprocess.CompletedProcess, script_name: str):
-    msg = f'Failed to run the "{script_name}" script with return code {completed_process.returncode}'
-    if (
-        completed_process.stdout is not None
-        and completed_process.stdout != ""
-        and completed_process.stderr is not None
-        and completed_process.stderr != ""
-    ):
+def run_script(script_name, script_path: str):
+    completed_process = subprocess.run(
+        ["bash", script_path],
+        shell=True,
+        capture_output=True,
+    )
+    if completed_process.returncode != 0:
+        error_script(completed_process, script_name)
+
+
+def error_script(completed_process: subprocess.CompletedProcess, script_path: str):
+    msg = f'Failed to run the "{script_path}" script with return code {completed_process.returncode}'
+    stdout = completed_process.stdout.decode().strip()
+    stderr = completed_process.stderr.decode().strip()
+    if stdout != "" or stderr != "":
         msg += ":\n"
-        if completed_process.stdout is not None and completed_process.stdout != "":
-            msg += completed_process.stdout
-        if completed_process.stderr is not None and completed_process.stderr != "":
-            msg += completed_process.stderr
+        if stdout != "":
+            msg += stdout
+        if stderr != "":
+            msg += stderr
     else:
         msg += "."
     error(msg)
