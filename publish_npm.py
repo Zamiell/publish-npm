@@ -28,6 +28,7 @@ BUILD_SCRIPT_PATH = os.path.join(DIR, BUILD_SCRIPT_NAME)
 
 def main():
     args = parse_command_line_arguments()
+    check_git_dirty()
     check_package_json_exists()
     check_logged_in_to_npm()
     update_dependencies(args)
@@ -49,10 +50,7 @@ def main():
         compile_typescript()
 
     git_commit_if_changes(args, version)
-
     publish_to_npm()
-
-    # Done
     printf(f"Published {PROJECT_NAME} version {version} successfully.")
 
 
@@ -91,6 +89,13 @@ def parse_command_line_arguments():
     )
 
     return parser.parse_args()
+
+
+def check_git_dirty():
+    if is_git_dirty():
+        error(
+            "Before publishing, you must push your current changes to git. (Version commits should be not contain any code changes."
+        )
 
 
 def check_package_json_exists():
@@ -231,32 +236,7 @@ def git_commit_if_changes(args, version):
     if args.skip_commit:
         return
 
-    # Check to see if this is a git repository
-    completed_process = subprocess.run(
-        ["git", "status"],
-        stdout=subprocess.DEVNULL,
-        stderr=subprocess.DEVNULL,
-    )
-    if completed_process.returncode != 0:
-        error("This is not a git repository.")
-
-    # Check to see if there are any changes
-    # https://stackoverflow.com/questions/3878624/how-do-i-programmatically-determine-if-there-are-uncommitted-changes
-    completed_process = subprocess.run(["git", "diff-index", "--quiet", "HEAD", "--"])
-    changes_to_existing_files = completed_process.returncode != 0
-
-    # Check to see if there are any untracked files
-    # https://stackoverflow.com/questions/11021287/git-detect-if-there-are-untracked-files-quickly
-    completed_process = subprocess.run(
-        ["git", "ls-files", "--other", "--directory", "--exclude-standard"],
-        stdout=subprocess.PIPE,
-    )
-    if completed_process.returncode != 0:
-        error("Failed to git ls-files.")
-    git_output = completed_process.stdout.decode("utf-8")
-    untracked_files_exist = git_output is not None and git_output.strip() != ""
-
-    if not changes_to_existing_files and not untracked_files_exist:
+    if not is_git_dirty():
         printf("There are no changes to push to git.")
         return
 
@@ -291,6 +271,35 @@ def publish_to_npm():
     )
     if completed_process.returncode != 0:
         error("Failed to npm publish.")
+
+
+def is_git_dirty():
+    # Check to see if this is a git repository
+    completed_process = subprocess.run(
+        ["git", "status"],
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+    )
+    if completed_process.returncode != 0:
+        error("This is not a git repository.")
+
+    # Check to see if there are any changes
+    # https://stackoverflow.com/questions/3878624/how-do-i-programmatically-determine-if-there-are-uncommitted-changes
+    completed_process = subprocess.run(["git", "diff-index", "--quiet", "HEAD", "--"])
+    changes_to_existing_files = completed_process.returncode != 0
+
+    # Check to see if there are any untracked files
+    # https://stackoverflow.com/questions/11021287/git-detect-if-there-are-untracked-files-quickly
+    completed_process = subprocess.run(
+        ["git", "ls-files", "--other", "--directory", "--exclude-standard"],
+        stdout=subprocess.PIPE,
+    )
+    if completed_process.returncode != 0:
+        error("Failed to git ls-files.")
+    git_output = completed_process.stdout.decode("utf-8")
+    untracked_files_exist = git_output is not None and git_output.strip() != ""
+
+    return changes_to_existing_files or untracked_files_exist
 
 
 def error(msg):
