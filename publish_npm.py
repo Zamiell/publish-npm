@@ -94,7 +94,7 @@ def parse_command_line_arguments():
 def check_git_dirty():
     if is_git_dirty():
         error(
-            "Before publishing, you must push your current changes to git. (Version commits should be not contain any code changes."
+            "Before publishing, you must push your current changes to git. (Version commits should be not contain any code changes.)"
         )
 
 
