@@ -302,7 +302,7 @@ def is_git_dirty():
     return changes_to_existing_files or untracked_files_exist
 
 
-def error(msg):
+def error(msg: str):
     printf(f"Error: {msg}")
     sys.exit(1)
 
@@ -312,6 +312,7 @@ def run_script(script_name, script_path: str):
         ["bash", script_path],
         shell=True,
         capture_output=True,
+        encoding="utf-8",
     )
     if completed_process.returncode != 0:
         error_script(completed_process, script_name)
@@ -319,8 +320,8 @@ def run_script(script_name, script_path: str):
 
 def error_script(completed_process: subprocess.CompletedProcess, script_path: str):
     msg = f'Failed to run the "{script_path}" script with return code {completed_process.returncode}'
-    stdout = completed_process.stdout.decode().strip()
-    stderr = completed_process.stderr.decode().strip()
+    stdout = completed_process.stdout.decode(encoding="utf-8").strip()
+    stderr = completed_process.stderr.decode(encoding="utf-8").strip()
     if stdout != "" or stderr != "":
         msg += ":\n"
         if stdout != "":
