@@ -309,8 +309,7 @@ def error(msg: str):
 
 def run_script(script_name, script_path: str):
     completed_process = subprocess.run(
-        # Always pass "--loglevel silent", even if the script doesn't support it
-        ["bash", script_path, "--loglevel", "silent"],
+        ["bash", script_path],
         shell=True,
         capture_output=True,
         encoding="utf-8",
