@@ -303,7 +303,7 @@ def is_git_dirty():
 
 
 def error(msg: str):
-    printf(f"Error: {msg}")
+    printf("Error:", msg)
     sys.exit(1)
 
 
