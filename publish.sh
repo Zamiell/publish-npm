@@ -14,11 +14,11 @@ function pause() {
 # Read the username and password.
 source .env
 if [[ -z $PYPI_USERNAME ]]; then
-  echo "Error: PYPI_USERNAME is not set. Copy \".env_template\" to \".env\" and fill in the values."
+  echo "Error: PYPI_USERNAME is not set. Copy \".env.example\" to \".env\" and fill in the values."
   exit 1
 fi
 if [[ -z $PYPI_PASS ]]; then
-  echo "Error: PYPI_PASS is not set. Copy \".env_template\" to \".env\" and fill in the values."
+  echo "Error: PYPI_PASS is not set. Copy \".env.example\" to \".env\" and fill in the values."
   exit 1
 fi
 
@@ -34,12 +34,14 @@ cd "$DIR"
 VERSION=$(sed -n 's/^.*version = "\(.*\)"/\1/p' $PROJECT_FILE)
 
 echo "Make sure that you bump the version in the \"$PROJECT_FILE\" file."
+echo "If you have not bumped the version, then publishing will fail."
+echo "(Press Ctrl + C now to cancel if so.)"
 echo "Using version: $VERSION"
 pause "Press enter to continue..."
 
 # Commit
-git add -A
-git commit -a -m "$VERSION"
+git add --all
+git commit --message "chore: release $VERSION"
 git pull
 git push
 

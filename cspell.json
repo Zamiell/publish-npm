@@ -1,0 +1,21 @@
+{
+  "$schema": "https://raw.githubusercontent.com/streetsidesoftware/cspell/main/cspell.schema.json",
+  "version": "0.2",
+  "files": ["**"],
+  "enableFiletypes": ["*"],
+  "enableGlobDot": true,
+  "useGitignore": true,
+  "ignorePaths": [".git/**"],
+  "words": [
+    "config",
+    "eslint",
+    "isaacscript",
+    "pass",
+    "printf",
+    "pypi",
+    "pyproject",
+    "tstl",
+    "untracked",
+    "zamiell"
+  ]
+}
