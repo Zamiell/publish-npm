@@ -33,18 +33,18 @@ def main():
     check_logged_in_to_npm()
     update_dependencies(args)
 
-    # Before we increment the version number, make sure that the program compiles
+    # Before we increment the version number, make sure that the program compiles.
     if is_typescript_project():
         printf("Testing to see if the project compiles...")
         compile_typescript()
 
-    # Increment the version number
+    # Increment the version number.
     version = get_version_from_package_json()
     if not args.skip_increment:
         version = increment_version(version)
         put_version(version)
 
-    # Build the program again so that the new version number is included in the compiled code
+    # Build the program again so that the new version number is included in the compiled code.
     if is_typescript_project():
         printf("Re-compiling the project...")
         compile_typescript()
@@ -125,7 +125,7 @@ def update_dependencies(args):
 
     printf("Updating NPM dependencies...")
 
-    # Get the hash before we potentially modify the "package.json" file
+    # Get the hash before we potentially modify the "package.json" file.
     before_hash = get_hash_of_package_json()
 
     if os.path.isfile(UPDATE_SCRIPT_PATH):
@@ -150,7 +150,7 @@ def update_dependencies(args):
 
     after_hash = get_hash_of_package_json()
     if before_hash != after_hash:
-        # The package.json file was modified, so install the new dependencies
+        # The package.json file was modified, so install the new dependencies.
         printf("Installing NPM dependencies...")
         completed_process = subprocess.run(["npm", "install", "--silent"], shell=True)
         if completed_process.returncode != 0:
@@ -240,12 +240,13 @@ def git_commit_if_changes(args, version):
         printf("There are no changes to push to git.")
         return
 
-    # Commit to the repository
+    # Commit to the repository.
     printf("Committing to the Git repository...")
-    completed_process = subprocess.run(["git", "add", "-A"])
+    completed_process = subprocess.run(["git", "add", "--all"])
     if completed_process.returncode != 0:
         error("Failed to git add.")
-    completed_process = subprocess.run(["git", "commit", "-m", version])
+    message = f"chore: release {version}"
+    completed_process = subprocess.run(["git", "commit", "--message", message])
     if completed_process.returncode != 0:
         error("Failed to git commit.")
     completed_process = subprocess.run(["git", "pull", "--rebase"])
@@ -274,7 +275,7 @@ def publish_to_npm():
 
 
 def is_git_dirty():
-    # Check to see if this is a git repository
+    # Check to see if this is a git repository.
     completed_process = subprocess.run(
         ["git", "status"],
         stdout=subprocess.DEVNULL,
@@ -283,12 +284,12 @@ def is_git_dirty():
     if completed_process.returncode != 0:
         error("This is not a git repository.")
 
-    # Check to see if there are any changes
+    # Check to see if there are any changes:
     # https://stackoverflow.com/questions/3878624/how-do-i-programmatically-determine-if-there-are-uncommitted-changes
     completed_process = subprocess.run(["git", "diff-index", "--quiet", "HEAD", "--"])
     changes_to_existing_files = completed_process.returncode != 0
 
-    # Check to see if there are any untracked files
+    # Check to see if there are any untracked files:
     # https://stackoverflow.com/questions/11021287/git-detect-if-there-are-untracked-files-quickly
     completed_process = subprocess.run(
         ["git", "ls-files", "--other", "--directory", "--exclude-standard"],
