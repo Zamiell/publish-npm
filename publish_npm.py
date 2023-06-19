@@ -260,14 +260,14 @@ def git_commit_if_changes(args, version):
 
 
 def publish_to_npm():
+    printf("Type in the two-factor OTP code tied to the npm account.")
+    otp_code = input()
+    if otp_code == "":
+        error("The OTP code cannot be blank.")
+
     printf("Publishing to NPM...")
     completed_process = subprocess.run(
-        [
-            "npm",
-            "publish",
-            "--access",
-            "public",
-        ],
+        ["npm", "publish", "--access=public", f"--otp={otp_code}"],
         shell=True,
     )
     if completed_process.returncode != 0:

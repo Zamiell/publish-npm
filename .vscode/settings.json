@@ -20,7 +20,7 @@
 
   // Use "black" to automatically format Python files
   // https://github.com/psf/black
-  "python.formatting.provider": "black",
+  "python.formatting.provider": "none",
   "python.linting.pylintEnabled": true,
   "python.linting.enabled": true,
 
@@ -28,6 +28,7 @@
   "[python]": {
     "editor.formatOnSave": true,
     "editor.tabSize": 4,
+    "editor.defaultFormatter": "ms-python.black-formatter",
   },
 
   "python.linting.pylintArgs": [
