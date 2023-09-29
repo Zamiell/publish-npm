@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "publish-npm"
-version = "1.1.0"
+version = "1.2.0"
 description = "a script to update an NPM package"
 authors = ["Zamiell <5511220+Zamiell@users.noreply.github.com>"]
 license = "GPL-3.0"
